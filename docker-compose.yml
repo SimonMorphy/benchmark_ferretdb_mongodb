@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: ghcr.io/ferretdb/postgres-documentdb:17-0.102.0-ferretdb-2.1.0
+    platform: linux/amd64
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=postgres
+    volumes:
+      - ./data/ferretdb/postgres:/var/lib/postgresql/data
+    networks:
+      - ferretdb
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
+
+  ferretdb:
+    image: ghcr.io/ferretdb/ferretdb:2.1.0
+    restart: on-failure
+    ports:
+      - 27017:27017
+    environment:
+      - FERRETDB_POSTGRESQL_URL=postgres://root:password@postgres:5432/postgres
+    depends_on:
+      - postgres
+    networks:
+      - ferretdb
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
+
+  mongodb:
+    image: mongo:7.0
+    platform: linux/amd64
+    restart: on-failure
+    ports:
+      - 27018:27017
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      - ./data/mongodb:/data/db
+    networks:
+      - ferretdb
+    deploy:
+      resources:
+        limits:
+          cpus: '4'
+          memory: 8G
+        reservations:
+          cpus: '2'
+          memory: 4G
+
+networks:
+  ferretdb:
+    name: ferretdb
